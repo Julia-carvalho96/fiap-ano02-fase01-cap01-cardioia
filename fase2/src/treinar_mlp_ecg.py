@@ -104,11 +104,61 @@ def carregar_pixels(
                 Image.Resampling.LANCZOS,
             )
             vetor = np.asarray(redimensionada, dtype=np.float32) / 255.0
+            vetor = 1.0 - vetor
             pixels.append(vetor.reshape(-1))
     matriz = np.stack(pixels)
     if matriz.shape != (len(inventario), 64 * 64):
         raise AssertionError(f"Formato inesperado: {matriz.shape}")
     return matriz
+
+
+def aumentar_dados_treino(
+    pixels: np.ndarray,
+    alvos: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Cria pequenos deslocamentos somente a partir do conjunto de treino."""
+    imagens = pixels.reshape(-1, 64, 64)
+    lotes = [imagens]
+    rotulos = [alvos]
+    for deslocamento_linha, deslocamento_coluna in [
+        (1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, -1),
+    ]:
+        deslocadas = np.roll(
+            imagens,
+            shift=(deslocamento_linha, deslocamento_coluna),
+            axis=(1, 2),
+        )
+        if deslocamento_linha == 1:
+            deslocadas[:, 0, :] = 0
+        elif deslocamento_linha == -1:
+            deslocadas[:, -1, :] = 0
+        if deslocamento_coluna == 1:
+            deslocadas[:, :, 0] = 0
+        elif deslocamento_coluna == -1:
+            deslocadas[:, :, -1] = 0
+        lotes.append(deslocadas)
+        rotulos.append(alvos)
+    aumentados = np.concatenate(lotes, axis=0).reshape(-1, 4096)
+    return aumentados.astype(np.float32), np.concatenate(rotulos)
+
+
+def selecionar_limiar(
+    verdadeiros: np.ndarray,
+    probabilidades: np.ndarray,
+) -> float:
+    """Seleciona na validação o limiar de maior acurácia balanceada."""
+    candidatos = np.linspace(0.2, 0.8, 61)
+    pontuacoes = [
+        balanced_accuracy_score(
+            verdadeiros,
+            (probabilidades >= limiar).astype(int),
+        )
+        for limiar in candidatos
+    ]
+    return float(candidatos[int(np.argmax(pontuacoes))])
 
 
 def dividir_dados(
@@ -186,11 +236,15 @@ def treinar_mlp(epocas: int = 40):
         random_state=SEMENTE,
         stratify=y_treino,
     )
-    classes = np.unique(y_ajuste)
+    x_ajuste_aumentado, y_ajuste_aumentado = aumentar_dados_treino(
+        x_ajuste,
+        y_ajuste,
+    )
+    classes = np.unique(y_ajuste_aumentado)
     pesos = compute_class_weight(
         class_weight="balanced",
         classes=classes,
-        y=y_ajuste,
+        y=y_ajuste_aumentado,
     )
     pesos_classe = {
         int(classe): float(peso)
@@ -206,8 +260,8 @@ def treinar_mlp(epocas: int = 40):
         )
     ]
     historico = modelo.fit(
-        x_ajuste,
-        y_ajuste,
+        x_ajuste_aumentado,
+        y_ajuste_aumentado,
         validation_data=(x_validacao, y_validacao),
         epochs=epocas,
         batch_size=8,
@@ -217,9 +271,16 @@ def treinar_mlp(epocas: int = 40):
         shuffle=True,
     )
 
+    probabilidades_validacao = modelo.predict(
+        x_validacao,
+        verbose=0,
+    ).reshape(-1)
+    limiar = selecionar_limiar(y_validacao, probabilidades_validacao)
     probabilidades = modelo.predict(x_teste, verbose=0).reshape(-1)
-    previsoes = (probabilidades >= 0.5).astype(int)
+    previsoes = (probabilidades >= limiar).astype(int)
     metricas = {
+        "limiar_selecionado_na_validacao": limiar,
+        "n_ajuste_apos_aumento": int(len(y_ajuste_aumentado)),
         "acuracia": float(accuracy_score(y_teste, previsoes)),
         "acuracia_balanceada": float(
             balanced_accuracy_score(y_teste, previsoes)
