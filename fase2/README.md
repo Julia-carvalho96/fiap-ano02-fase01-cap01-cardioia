@@ -196,7 +196,7 @@ python fase2/src/treinar_mlp_ecg.py
 - `.github/workflows/fase2-baseline.yml`: NLP, portal React, Streamlit, modelo tabular e notebooks.
 - `.github/workflows/fase2-visual.yml`: dados visuais, arquitetura, MLP, notebook e artifacts.
 
-Consulte `fase2/CHECKLIST_ENUNCIADO.md` para a correspondência completa entre requisitos, arquivos e pendências.
+Consulte `fase2/CHECKLIST_ENUNCIADO.md` para a correspondência completa entre requisitos, arquivos e pendências. O relatório consolidado está em `fase2/RELATORIO_ENTREGA.md` e os três roteiros cronometrados estão em `fase2/ROTEIRO_VIDEO.md`.
 
 ## Limitações gerais
 
@@ -212,3 +212,7 @@ Consulte `fase2/CHECKLIST_ENUNCIADO.md` para a correspondência completa entre r
 ## Privacidade
 
 O front não usa API própria nem banco de dados e não armazena relatos. Use apenas exemplos fictícios e nunca forneça nome, CPF, prontuário ou outra informação identificável.
+
+## Encerramento da entrega
+
+Para a submissão acadêmica final ainda é necessário criar o repositório público separado do portal e inserir os links dos vídeos não listados. Essas pendências são externas; o código, os notebooks e os testes já estão implementados.
