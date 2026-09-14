@@ -17,6 +17,11 @@ import streamlit as st
 DIRETORIO_FASE2 = Path(__file__).resolve().parent
 sys.path.insert(0, str(DIRETORIO_FASE2 / "src"))
 
+from classificar_risco_texto import (  # noqa: E402
+    probabilidade_alto_risco,
+    treinar_modelo_completo,
+)
+from extrair_sintomas import analisar_relato, carregar_mapa  # noqa: E402
 from treinar_baselines import carregar_dados, criar_modelos  # noqa: E402
 
 
@@ -143,6 +148,16 @@ def obter_modelo():
     modelo = criar_modelos()["regressao_logistica"]
     modelo.fit(atributos, alvo)
     return modelo
+
+
+@st.cache_resource(show_spinner="Preparando o classificador textual...")
+def obter_modelo_textual():
+    return treinar_modelo_completo()
+
+
+@st.cache_resource(show_spinner=False)
+def obter_mapa_conhecimento():
+    return carregar_mapa()
 
 
 def formatar_categoria(valor: str) -> str:
@@ -473,6 +488,134 @@ def mostrar_resultado(registro: pd.DataFrame) -> None:
         )
 
 
+def pagina_textual() -> None:
+    st.subheader("Análise de relatos simulados")
+    st.caption(
+        "Demonstração da extração por mapa de conhecimento e do classificador "
+        "TF-IDF solicitado na Fase 2. Use apenas frases fictícias."
+    )
+
+    aba_extracao, aba_risco = st.tabs(
+        ["Extrair sintomas", "Classificar risco textual"]
+    )
+
+    with aba_extracao:
+        st.markdown("#### Associação por mapa de conhecimento")
+        relato_extracao = st.text_area(
+            "Relato fictício",
+            value=(
+                "Há dois dias sinto dor forte no peito e falta de ar, e não "
+                "consigo subir escadas."
+            ),
+            height=120,
+            key="relato_extracao",
+        )
+        if st.button(
+            "Identificar sintomas e associações",
+            type="primary",
+            use_container_width=True,
+        ):
+            resultado = analisar_relato(
+                relato_extracao,
+                obter_mapa_conhecimento(),
+            )
+            if not resultado["encontrou_correspondencia"]:
+                st.info(
+                    "Nenhuma expressão do mapa de conhecimento foi encontrada. "
+                    "Isso não confirma ausência de doença."
+                )
+            else:
+                st.success(
+                    "Expressões encontradas: "
+                    + ", ".join(resultado["sintomas_identificados"])
+                )
+                hipoteses = pd.DataFrame(resultado["hipoteses_associadas"])
+                hipoteses = hipoteses.rename(
+                    columns={
+                        "doenca_associada": "Associação no mapa",
+                        "prioridade_no_mapa": "Prioridade didática",
+                        "sintomas_identificados": "Expressões",
+                        "quantidade_correspondencias": "Correspondências",
+                    }
+                )
+                hipoteses["Expressões"] = hipoteses["Expressões"].apply(
+                    lambda valores: ", ".join(valores)
+                )
+                st.dataframe(
+                    hipoteses[
+                        [
+                            "Associação no mapa",
+                            "Prioridade didática",
+                            "Expressões",
+                            "Correspondências",
+                        ]
+                    ],
+                    use_container_width=True,
+                    hide_index=True,
+                )
+            st.warning(
+                "As associações são exemplos baseados em palavras-chave e não "
+                "constituem diagnóstico."
+            )
+
+    with aba_risco:
+        st.markdown("#### Classificação com TF-IDF")
+        relato_risco = st.text_area(
+            "Frase fictícia para classificação",
+            value=(
+                "Sinto aperto forte no peito, suor frio e dificuldade para "
+                "respirar desde esta manhã."
+            ),
+            height=120,
+            key="relato_risco",
+        )
+        if st.button(
+            "Classificar frase",
+            type="primary",
+            use_container_width=True,
+        ):
+            if not relato_risco.strip():
+                st.error("Digite uma frase fictícia antes de classificar.")
+            else:
+                modelo = obter_modelo_textual()
+                probabilidade = float(
+                    probabilidade_alto_risco(modelo, [relato_risco])[0]
+                )
+                classe = str(modelo.predict([relato_risco])[0])
+                st.markdown(
+                    f"""
+                    <div class="result-card">
+                        <div class="muted">
+                            Resultado do classificador textual acadêmico
+                        </div>
+                        <div class="result-number">{probabilidade:.1%}</div>
+                        <p><strong>Classe estimada:</strong> {classe.title()}</p>
+                        <p class="muted">
+                            Percentual matemático atribuído à classe “alto risco”
+                            na base simulada.
+                        </p>
+                    </div>
+                    """,
+                    unsafe_allow_html=True,
+                )
+                st.progress(probabilidade)
+                st.warning(
+                    "A classificação foi treinada em frases simuladas. Não use "
+                    "este resultado para decidir urgência ou atendimento médico."
+                )
+
+    with st.expander("Como as duas técnicas funcionam?"):
+        st.write(
+            "**Extração:** normaliza o texto e procura expressões cadastradas "
+            "no mapa de conhecimento. **Classificação:** converte unigramas e "
+            "bigramas em vetores TF-IDF e aplica uma Regressão Logística."
+        )
+        st.write(
+            "Os módulos textual, tabular e visual usam bases de origens "
+            "diferentes e permanecem independentes."
+        )
+
+
 def pagina_desempenho() -> None:
     st.subheader("Desempenho observado")
     st.caption("Avaliação no conjunto de teste com 61 pacientes.")
@@ -564,8 +707,8 @@ def main() -> None:
             <div class="academic-badge">Protótipo acadêmico • Fase 2</div>
             <h1>CardioIA</h1>
             <p>
-                Uma demonstração transparente de Machine Learning aplicado a
-                dados cardiovasculares tabulares.
+                Uma demonstração transparente de NLP e Machine Learning
+                aplicado a dados cardiovasculares simulados e históricos.
             </p>
         </div>
         """,
@@ -577,9 +720,17 @@ def main() -> None:
         "e não substitui avaliação médica."
     )
 
-    aba_simulacao, aba_desempenho, aba_sobre = st.tabs(
-        ["Simulação", "Desempenho", "Metodologia e limitações"]
+    aba_textual, aba_simulacao, aba_desempenho, aba_sobre = st.tabs(
+        [
+            "Triagem textual",
+            "Modelo tabular",
+            "Desempenho tabular",
+            "Metodologia e limitações",
+        ]
     )
+
+    with aba_textual:
+        pagina_textual()
 
     with aba_simulacao:
         area_resultado = st.container()
