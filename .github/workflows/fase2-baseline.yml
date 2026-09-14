@@ -16,7 +16,7 @@ permissions:
 jobs:
   validar:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
 
     steps:
       - name: Baixar o repositório
@@ -33,10 +33,19 @@ jobs:
         run: python -m pip install -r fase2/requirements.txt
 
       - name: Verificar sintaxe
-        run: python -m py_compile fase2/src/treinar_baselines.py
+        run: |
+          python -m py_compile fase2/src/treinar_baselines.py
+          python -m py_compile fase2/src/analisar_modelo.py
 
       - name: Executar treinamento
         run: python fase2/src/treinar_baselines.py
+
+      - name: Executar análise estatística e visual
+        run: python fase2/src/analisar_modelo.py
+
+      - name: Executar notebook
+        run: |
+          jupyter nbconvert             --to notebook             --execute fase2/notebooks/analise_baseline.ipynb             --output-dir fase2/resultados             --output analise_baseline_executada.ipynb             --ExecutePreprocessor.timeout=300
 
       - name: Conferir saídas obrigatórias
         run: |
@@ -46,19 +55,12 @@ jobs:
           test -s fase2/resultados/previsoes_teste.csv
           test -s fase2/resultados/metadados_execucao.json
           test -s fase2/resultados/melhor_modelo.joblib
-
-      - name: Exibir resumo das métricas
-        run: |
-          echo "=== Validação cruzada ==="
-          cat fase2/resultados/metricas_validacao_cruzada.csv
-          echo "=== Teste ==="
-          cat fase2/resultados/metricas_teste.csv
-          echo "=== Desempenho por sexo ==="
-          cat fase2/resultados/metricas_por_sexo.csv
-
-      - name: Disponibilizar resultados da execução
-        uses: actions/upload-artifact@v4
-        with:
-          name: resultados-baseline-fase2
-          path: fase2/resultados/
-          if-no-files-found: error
+          test -s fase2/resultados/intervalos_confianca_bootstrap.csv
+          test -s fase2/resultados/importancia_variaveis.csv
+          test -s fase2/resultados/graficos/matriz_confusao.png
+          test -s fase2/resultados/graficos/curva_roc.png
+          test -s fase2/resultados/graficos/curva_precisao_recall.png
+          test -s fase2/resultados/graficos/curva_calibracao.png
+          test -s fase2/resultados/graficos/distribuicao_alvo_por_sexo.png
+          test -s fase2/resultados/graficos/importancia_variaveis.png
+          test -s fase2/resultados/analise_baseline_executada.ipynb
