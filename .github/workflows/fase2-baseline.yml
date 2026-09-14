@@ -80,9 +80,10 @@ jobs:
       - name: Executar análise estatística e visual
         run: python fase2/src/analisar_modelo.py
 
-      - name: Executar notebook
+      - name: Executar notebooks
         run: |
           jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb --output-dir fase2/resultados --output analise_baseline_executada.ipynb --ExecutePreprocessor.timeout=300
+          jupyter nbconvert --to notebook --execute fase2/notebooks/classificacao_textual_tfidf.ipynb --output-dir fase2/resultados/nlp --output classificacao_textual_tfidf_executada.ipynb --ExecutePreprocessor.timeout=300
 
       - name: Conferir saídas obrigatórias
         run: |
@@ -107,3 +108,4 @@ jobs:
           test -s fase2/resultados/nlp/termos_influentes.csv
           test -s fase2/resultados/nlp/classificador_risco_texto.joblib
           test -s fase2/resultados/nlp/matriz_confusao_texto.png
+          test -s fase2/resultados/nlp/classificacao_textual_tfidf_executada.ipynb
