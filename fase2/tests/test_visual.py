@@ -22,15 +22,15 @@ from treinar_mlp_ecg import (  # noqa: E402
 
 def main() -> None:
     inventario = inventariar_imagens()
-    assert len(inventario) == 120
-    assert inventario["hash_sha256"].nunique() == 120
+    assert len(inventario) == 60
+    assert inventario["hash_sha256"].nunique() == 60
     assert inventario["classe_original"].nunique() == 4
     assert set(inventario["classe_binaria"]) == {"normal", "anormal"}
     assert int((inventario["classe_binaria"] == "normal").sum()) == 30
-    assert int((inventario["classe_binaria"] == "anormal").sum()) == 90
+    assert int((inventario["classe_binaria"] == "anormal").sum()) == 30
 
     pixels = carregar_pixels(inventario)
-    assert pixels.shape == (120, 4096)
+    assert pixels.shape == (60, 4096)
     assert pixels.dtype == np.float32
     assert 0.0 <= float(pixels.min()) <= float(pixels.max()) <= 1.0
 
@@ -42,8 +42,8 @@ def main() -> None:
         treino_idx,
         teste_idx,
     ) = dividir_dados(inventario, pixels)
-    assert len(x_treino) == 96
-    assert len(x_teste) == 24
+    assert len(x_treino) == 48
+    assert len(x_teste) == 12
     assert set(inventario.iloc[treino_idx]["hash_sha256"]).isdisjoint(
         set(inventario.iloc[teste_idx]["hash_sha256"])
     )
