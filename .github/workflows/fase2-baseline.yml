@@ -1,4 +1,4 @@
-name: Validar baseline da Fase 2
+name: Validar Fase 2
 
 on:
   push:
@@ -34,8 +34,25 @@ jobs:
 
       - name: Verificar sintaxe
         run: |
+          python -m py_compile fase2/app.py
           python -m py_compile fase2/src/treinar_baselines.py
           python -m py_compile fase2/src/analisar_modelo.py
+
+      - name: Testar inicialização do front
+        run: |
+          streamlit run fase2/app.py             --server.headless true             --server.port 8501             > /tmp/cardioia-streamlit.log 2>&1 &
+          app_pid=$!
+          trap 'kill "$app_pid" 2>/dev/null || true' EXIT
+
+          for tentativa in $(seq 1 30); do
+            if curl --fail --silent http://127.0.0.1:8501/_stcore/health | grep --quiet ok; then
+              exit 0
+            fi
+            sleep 1
+          done
+
+          cat /tmp/cardioia-streamlit.log
+          exit 1
 
       - name: Executar treinamento
         run: python fase2/src/treinar_baselines.py
