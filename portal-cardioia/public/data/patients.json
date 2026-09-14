@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "name": "Ana Martins",
+    "age": 58,
+    "status": "Acompanhamento",
+    "lastVisit": "10/09/2026"
+  },
+  {
+    "id": 2,
+    "name": "Carlos Souza",
+    "age": 64,
+    "status": "Prioridade",
+    "lastVisit": "08/09/2026"
+  },
+  {
+    "id": 3,
+    "name": "Marina Lima",
+    "age": 45,
+    "status": "Estável",
+    "lastVisit": "02/09/2026"
+  },
+  {
+    "id": 4,
+    "name": "João Ribeiro",
+    "age": 71,
+    "status": "Acompanhamento",
+    "lastVisit": "28/08/2026"
+  },
+  {
+    "id": 5,
+    "name": "Beatriz Alves",
+    "age": 39,
+    "status": "Estável",
+    "lastVisit": "25/08/2026"
+  },
+  {
+    "id": 6,
+    "name": "Paulo Costa",
+    "age": 52,
+    "status": "Prioridade",
+    "lastVisit": "21/08/2026"
+  }
+]
