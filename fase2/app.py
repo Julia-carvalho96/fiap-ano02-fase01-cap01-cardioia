@@ -493,9 +493,26 @@ def main() -> None:
     )
 
     with aba_simulacao:
+        area_resultado = st.container()
         registro = criar_formulario()
+
         if registro is not None:
-            mostrar_resultado(registro)
+            st.session_state["ultimo_registro"] = registro
+            st.toast(
+                "Simulação concluída. O resultado foi exibido acima do formulário.",
+                icon="✅",
+            )
+
+        if "ultimo_registro" in st.session_state:
+            with area_resultado:
+                try:
+                    mostrar_resultado(st.session_state["ultimo_registro"])
+                except Exception as erro:
+                    st.error(
+                        "Não foi possível concluir a simulação. "
+                        "Atualize a página e tente novamente."
+                    )
+                    st.exception(erro)
 
     with aba_desempenho:
         pagina_desempenho()
