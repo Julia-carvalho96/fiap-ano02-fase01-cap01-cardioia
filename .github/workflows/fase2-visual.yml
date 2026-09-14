@@ -1,0 +1,68 @@
+name: Validar MLP visual da Fase 2
+
+on:
+  push:
+    branches:
+      - fase-2-machine-learning
+    paths:
+      - "fase2/src/treinar_mlp_ecg.py"
+      - "fase2/tests/test_visual.py"
+      - "fase2/notebooks/mlp_ecg_binaria.ipynb"
+      - "fase2/requirements-visual.txt"
+      - "assets/imagens/ecg/**"
+      - ".github/workflows/fase2-visual.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validar-mlp:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Baixar o repositório
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: fase2/requirements-visual.txt
+
+      - name: Instalar dependências visuais
+        run: python -m pip install -r fase2/requirements-visual.txt
+
+      - name: Verificar sintaxe
+        run: |
+          python -m py_compile fase2/src/treinar_mlp_ecg.py
+          python -m py_compile fase2/tests/test_visual.py
+
+      - name: Testar dados e arquitetura
+        run: python fase2/tests/test_visual.py
+
+      - name: Treinar e avaliar MLP
+        run: python fase2/src/treinar_mlp_ecg.py
+
+      - name: Executar notebook visual
+        run: |
+          jupyter nbconvert --to notebook --execute fase2/notebooks/mlp_ecg_binaria.ipynb --output-dir fase2/resultados/visual --output mlp_ecg_binaria_executada.ipynb --ExecutePreprocessor.timeout=900
+
+      - name: Conferir saídas
+        run: |
+          test -s fase2/resultados/visual/metricas_mlp_ecg.json
+          test -s fase2/resultados/visual/inventario_binario.csv
+          test -s fase2/resultados/visual/previsoes_mlp_ecg.csv
+          test -s fase2/resultados/visual/modelo_mlp_ecg.keras
+          test -s fase2/resultados/visual/curva_perda_mlp.png
+          test -s fase2/resultados/visual/matriz_confusao_mlp.png
+          test -s fase2/resultados/visual/mlp_ecg_binaria_executada.ipynb
+
+      - name: Disponibilizar evidências da execução
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-mlp-ecg
+          path: fase2/resultados/visual/
+          if-no-files-found: error
