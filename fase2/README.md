@@ -1,75 +1,95 @@
 # Fase 2 — Machine Learning
 
-Esta pasta reúne a etapa de Machine Learning do CardioIA usando exclusivamente a modalidade numérica da base Cleveland preparada na Fase 1.
+Esta pasta reúne a etapa de Machine Learning do CardioIA, construída exclusivamente com a modalidade numérica da base Heart Disease — Cleveland preparada na Fase 1.
 
-## Estado atual
+> **Uso exclusivamente educacional.** O projeto não realiza diagnóstico, não estima risco clínico real e não substitui avaliação médica.
 
-Já existem:
+## Aplicação publicada
 
-- pipeline de pré-processamento e treinamento;
-- comparação entre Regressão Logística e Random Forest;
-- avaliação geral e separada por sexo;
-- intervalos de confiança por bootstrap;
-- matriz de confusão, curvas ROC e precisão-recall;
-- análise de calibração e interpretação das variáveis;
-- notebook narrado;
-- front acadêmico em Streamlit;
-- validação automática do pipeline, notebook e inicialização do front.
+- **CardioIA:** https://cardioia-fiap.streamlit.app/
+- **Arquivo principal:** `fase2/app.py`
+- **Branch:** `fase-2-machine-learning`
 
-Ainda não existem:
+A aplicação possui três áreas:
 
-- API independente para servir o modelo;
-- implantação pública;
-- autenticação ou armazenamento de simulações;
-- integração com as modalidades textual e visual.
+1. **Simulação:** formulário com as 13 variáveis e estimativa produzida pelo modelo.
+2. **Desempenho:** métricas gerais e avaliação descritiva separada por sexo.
+3. **Metodologia e limitações:** origem dos dados, decisões experimentais e cuidados de interpretação.
+
+A tela informa o desfecho específico da base, diferencia classe matemática de interpretação clínica, mostra os fatores que aumentaram ou reduziram cada estimativa e alerta quando valores ausentes foram preenchidos automaticamente.
 
 ## Objetivo
 
-Construir e comparar classificadores supervisionados para estimar a presença de doença cardíaca a partir das 13 variáveis clínicas e disponibilizar uma interface demonstrativa e transparente. O resultado é acadêmico e exploratório e não deve ser usado para diagnóstico ou decisão clínica.
+Construir e comparar classificadores supervisionados para estimar a presença do desfecho registrado na base Cleveland: estreitamento angiográfico superior a 50%. O resultado é acadêmico e exploratório.
 
-## Front acadêmico
+## Estado da entrega
 
-O arquivo `fase2/app.py` disponibiliza três áreas:
+- pipeline de pré-processamento e treinamento concluído;
+- comparação entre Regressão Logística e Random Forest concluída;
+- validação cruzada e seleção do modelo concluídas;
+- avaliação geral e separada por sexo concluída;
+- intervalos de confiança por bootstrap concluídos;
+- matriz de confusão, curvas ROC e precisão-recall concluídas;
+- análise de calibração e interpretação das variáveis concluídas;
+- notebook narrado e executável concluído;
+- front acadêmico publicado em Streamlit;
+- testes funcionais e auditoria de cenários automatizados;
+- workflow de validação executado com sucesso.
 
-1. **Simulação:** formulário com as 13 variáveis, probabilidade e classe produzidas pelo modelo.
-2. **Desempenho:** principais métricas gerais e avaliação descritiva por sexo.
-3. **Metodologia e limitações:** origem dos dados, limitações demográficas e cuidados de interpretação.
+Não fazem parte do escopo desta fase: API independente, autenticação, armazenamento de simulações e fusão com as modalidades textual ou visual.
 
-A simulação também apresenta os fatores com maior contribuição local. Essas contribuições explicam o cálculo do modelo, mas não representam causalidade ou recomendação médica.
+## Resultados principais
 
-O formulário não possui integração com banco de dados nem API externa. Mesmo assim, a própria tela orienta o uso exclusivo de dados fictícios e proíbe a inserção de informações identificáveis.
+O conjunto de teste estratificado contém 61 pacientes, sendo 28 com desfecho positivo.
 
-### Executar o front
+| Métrica | Resultado |
+|---|---:|
+| Acurácia | 86,9% |
+| Precisão | 81,3% |
+| Sensibilidade/recall | 92,9% |
+| F1 | 86,7% |
+| ROC AUC | 0,958 |
 
-Após instalar as dependências, execute na raiz do repositório:
+A Regressão Logística foi selecionada pela maior ROC AUC média na validação cruzada do conjunto de treino. A diferença em relação ao Random Forest foi pequena e não demonstra superioridade universal.
 
-```bash
-streamlit run fase2/app.py
-```
+### Avaliação descritiva por sexo
 
-O navegador abrirá normalmente em `http://localhost:8501`.
+| Sexo | n | Positivos | Acurácia | Precisão | Sensibilidade | F1 | ROC AUC |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Feminino | 20 | 7 | 95,0% | 100,0% | 85,7% | 92,3% | 1,000 |
+| Masculino | 41 | 21 | 82,9% | 76,9% | 95,2% | 85,1% | 0,938 |
+
+Os grupos são pequenos e desbalanceados. As diferenças são apenas descritivas e não sustentam conclusões de equidade ou desempenho clínico.
 
 ## Protocolo experimental
 
-1. Carregar o arquivo `assets/dados/processed/heart_disease_cleveland.csv`.
-2. Separar atributos e variável-alvo antes de qualquer ajuste de pré-processamento.
-3. Fazer divisão estratificada de 80% para treino e 20% para teste, com `random_state=42`.
-4. Ajustar imputação, codificação e padronização somente com os dados de treino por meio de `Pipeline`, evitando vazamento de dados.
-5. Comparar Regressão Logística e Random Forest com validação cruzada estratificada no treino.
-6. Selecionar o modelo pela maior ROC AUC média na validação cruzada, sem consultar o teste.
+1. Carregar `assets/dados/processed/heart_disease_cleveland.csv`.
+2. Separar atributos e alvo antes de ajustar qualquer transformação.
+3. Fazer divisão estratificada de 80% para treino e 20% para teste, com semente 42.
+4. Ajustar imputação, codificação e padronização somente dentro do treino por meio de `Pipeline`.
+5. Comparar Regressão Logística e Random Forest com validação cruzada estratificada em cinco folds.
+6. Selecionar o modelo pela ROC AUC média da validação, sem consultar o teste.
 7. Avaliar uma única vez no teste com acurácia, precisão, recall, F1 e ROC AUC.
-8. Calcular as mesmas métricas separadamente para os grupos feminino e masculino.
+8. Avaliar as mesmas métricas separadamente para os grupos feminino e masculino.
 9. Estimar intervalos de confiança de 95% com 2.000 reamostragens bootstrap.
-10. Avaliar discriminação, calibração e influência das variáveis.
-11. Treinar uma cópia da Regressão Logística com toda a base exclusivamente para as simulações do front, depois de concluída a seleção experimental.
+10. Examinar discriminação, calibração e influência das variáveis.
+11. Treinar uma cópia da Regressão Logística com toda a base exclusivamente para o front.
+
+## Pré-processamento
+
+- Campos numéricos ausentes: imputação pela mediana do conjunto de treino.
+- Campos categóricos ausentes: imputação pela categoria mais frequente no treino.
+- Campos categóricos: codificação one-hot.
+- Campos numéricos: padronização.
+- Todas as transformações ficam dentro do pipeline para evitar vazamento de dados.
 
 ## Decisões relacionadas ao feedback da Fase 1
 
-- **Avaliação demográfica:** o desempenho é reportado separadamente por sexo, além das métricas gerais. Diferenças são descritas com cautela porque a base Cleveland é pequena e demograficamente limitada.
-- **Separação por indivíduo:** a base tabular contém uma linha por paciente, portanto a divisão é feita no nível do paciente. Caso outra fonte traga múltiplos exames por indivíduo, a divisão deverá ser feita por identificador de paciente com grupos exclusivos entre treino e teste.
+- **Avaliação demográfica:** desempenho reportado separadamente por sexo e interpretado com cautela.
+- **Separação por indivíduo:** a base tabular possui uma linha por paciente, permitindo divisão no nível do paciente.
 - **Prevalência:** a amostra visual balanceada da Fase 1 não é usada para inferir prevalência.
-- **Modalidades independentes:** dados numéricos, textuais e visuais permanecem independentes. Este experimento usa somente dados numéricos e não realiza fusão multimodal.
-- **Reprodutibilidade:** sementes aleatórias, configuração dos modelos, métricas e previsões ficam registradas durante a execução.
+- **Modalidades independentes:** somente os dados numéricos são utilizados nesta fase.
+- **Reprodutibilidade:** sementes, configurações, métricas e previsões são registradas durante a execução.
 
 ## Estrutura
 
@@ -81,17 +101,20 @@ fase2/
 ├── notebooks/
 │   └── analise_baseline.ipynb
 ├── src/
-│   ├── treinar_baselines.py
-│   └── analisar_modelo.py
+│   ├── analisar_modelo.py
+│   └── treinar_baselines.py
+├── tests/
+│   ├── auditar_cenarios.py
+│   └── test_app.py
 └── resultados/
     └── README.md
 ```
 
-Os demais arquivos de `resultados/` são gerados ao executar o projeto e não precisam existir previamente.
+Os scripts geram métricas, previsões, gráficos, modelo serializado e uma cópia executada do notebook dentro de `fase2/resultados/`.
 
-## Como executar o projeto completo
+## Como executar
 
-Na raiz do repositório:
+Pré-requisito: Python 3.12.
 
 ```bash
 python -m venv .venv
@@ -102,26 +125,38 @@ python fase2/src/analisar_modelo.py
 streamlit run fase2/app.py
 ```
 
-No Windows, a ativação do ambiente virtual pode ser feita com:
+No Windows, use `.venv\Scripts\activate` para ativar o ambiente.
 
-```powershell
-.venv\Scripts\activate
-```
-
-O notebook pode ser aberto no Jupyter ou executado integralmente:
+Para executar o notebook integralmente:
 
 ```bash
-jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb
+jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb --output-dir fase2/resultados --output analise_baseline_executada.ipynb
 ```
 
-## Saídas geradas
+## Validação automática
 
-- métricas de validação cruzada e teste;
-- métricas gerais e por sexo;
-- intervalos de confiança por bootstrap;
-- previsões do conjunto de teste;
-- modelo treinado;
-- tabela de importância das variáveis;
-- matriz de confusão;
-- curvas ROC, precisão-recall e calibração;
-- distribuição do alvo por sexo.
+O workflow `.github/workflows/fase2-baseline.yml`:
+
+- verifica a sintaxe;
+- testa a inicialização do Streamlit;
+- executa uma simulação completa;
+- audita cenários sintéticos;
+- treina e avalia os modelos;
+- executa as análises e o notebook;
+- confere todas as saídas obrigatórias.
+
+## Limitações
+
+- apenas 303 registros de uma única instituição;
+- dados coletados nos Estados Unidos na década de 1980;
+- ausência de representatividade brasileira;
+- distribuição desigual entre os sexos;
+- avaliação por sexo baseada em subgrupos pequenos;
+- ausência de validação clínica, prospectiva e externa;
+- probabilidades não devem ser interpretadas como risco individual;
+- valores ausentes imputados adicionam incerteza;
+- associações aprendidas pelo modelo não demonstram causalidade.
+
+## Privacidade
+
+O front não utiliza API própria nem banco de dados e não armazena os valores preenchidos. A interface orienta o uso exclusivo de dados fictícios e proíbe informações identificáveis.
