@@ -124,3 +124,10 @@ jobs:
           test -s fase2/resultados/nlp/classificador_risco_texto.joblib
           test -s fase2/resultados/nlp/matriz_confusao_texto.png
           test -s fase2/resultados/nlp/classificacao_textual_tfidf_executada.ipynb
+
+      - name: Disponibilizar evidências da execução
+        uses: actions/upload-artifact@v4
+        with:
+          name: resultados-fase2-nlp-e-tabular
+          path: fase2/resultados/
+          if-no-files-found: error
