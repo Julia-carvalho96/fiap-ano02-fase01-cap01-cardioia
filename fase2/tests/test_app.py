@@ -36,4 +36,17 @@ subtitulos = [str(item.value) for item in app.subheader]
 if "Resultado da simulação" not in subtitulos:
     raise AssertionError("A seção de resultado não apareceu após a simulação.")
 
-print("Front aberto e simulação executada com sucesso.")
+textos = " ".join(str(item.value) for item in app.markdown)
+alertas = " ".join(
+    str(item.value)
+    for colecao in [app.warning, app.error, app.info]
+    for item in colecao
+)
+if "Estimativa para o desfecho da base Cleveland" not in textos:
+    raise AssertionError("A definição específica da estimativa não foi exibida.")
+if "Campos não informados" not in alertas:
+    raise AssertionError("O aviso sobre imputação de campos ausentes não foi exibido.")
+if "não é a chance geral" not in alertas:
+    raise AssertionError("O alerta contra interpretação clínica não foi exibido.")
+
+print("Front aberto, simulação executada e explicações exibidas com sucesso.")
