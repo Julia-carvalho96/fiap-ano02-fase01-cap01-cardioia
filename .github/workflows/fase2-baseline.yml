@@ -47,6 +47,15 @@ jobs:
           test -s fase2/resultados/metadados_execucao.json
           test -s fase2/resultados/melhor_modelo.joblib
 
+      - name: Exibir resumo das métricas
+        run: |
+          echo "=== Validação cruzada ==="
+          cat fase2/resultados/metricas_validacao_cruzada.csv
+          echo "=== Teste ==="
+          cat fase2/resultados/metricas_teste.csv
+          echo "=== Desempenho por sexo ==="
+          cat fase2/resultados/metricas_por_sexo.csv
+
       - name: Disponibilizar resultados da execução
         uses: actions/upload-artifact@v4
         with:
