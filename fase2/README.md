@@ -1,162 +1,214 @@
-# Fase 2 — Machine Learning
+# Fase 2 — Diagnóstico automatizado com IA
 
-Esta pasta reúne a etapa de Machine Learning do CardioIA, construída exclusivamente com a modalidade numérica da base Heart Disease — Cleveland preparada na Fase 1.
+Esta fase implementa os entregáveis obrigatórios de **NLP, extração de informações e classificação textual** do CardioIA. Como extensões, preserva o modelo tabular da base Cleveland, oferece uma interface demonstrativa em Streamlit, constrói o portal React + Vite do Ir Além 1 e implementa a MLP visual do Ir Além 2.
 
-> **Uso exclusivamente educacional.** O projeto não realiza diagnóstico, não estima risco clínico real e não substitui avaliação médica.
+> **Uso exclusivamente educacional.** As bases textuais são simuladas, os modelos não possuem validação clínica e nenhuma saída deve orientar diagnóstico, urgência ou tratamento.
 
 ## Aplicação publicada
 
 - **CardioIA:** https://cardioia-fiap.streamlit.app/
-- **Arquivo principal:** `fase2/app.py`
+- **Arquivo:** `fase2/app.py`
 - **Branch:** `fase-2-machine-learning`
 
-A aplicação possui três áreas:
+A aplicação demonstra três modalidades independentes:
 
-1. **Simulação:** formulário com as 13 variáveis e estimativa produzida pelo modelo.
-2. **Desempenho:** métricas gerais e avaliação descritiva separada por sexo.
-3. **Metodologia e limitações:** origem dos dados, decisões experimentais e cuidados de interpretação.
+1. extração de sintomas por mapa de conhecimento;
+2. classificação textual com TF-IDF;
+3. classificação tabular histórica como extensão.
 
-A tela informa o desfecho específico da base, diferencia classe matemática de interpretação clínica, mostra os fatores que aumentaram ou reduziram cada estimativa e alerta quando valores ausentes foram preenchidos automaticamente.
+## Entrega obrigatória — Parte 1
 
-## Objetivo
+### Relatos simulados
 
-Construir e comparar classificadores supervisionados para estimar a presença do desfecho registrado na base Cleveland: estreitamento angiográfico superior a 50%. O resultado é acadêmico e exploratório.
+`fase2/dados/relatos_sintomas.txt` contém exatamente 10 relatos completos e distintos. Cada frase informa sintomas, início temporal e impacto na rotina.
 
-## Estado da entrega
+### Mapa de conhecimento
 
-- pipeline de pré-processamento e treinamento concluído;
-- comparação entre Regressão Logística e Random Forest concluída;
-- validação cruzada e seleção do modelo concluídas;
-- avaliação geral e separada por sexo concluída;
-- intervalos de confiança por bootstrap concluídos;
-- matriz de confusão, curvas ROC e precisão-recall concluídas;
-- análise de calibração e interpretação das variáveis concluídas;
-- notebook narrado e executável concluído;
-- front acadêmico publicado em Streamlit;
-- testes funcionais e auditoria de cenários automatizados;
-- workflow de validação executado com sucesso.
+`fase2/dados/mapa_conhecimento.csv` contém 25 associações organizadas nas colunas:
 
-Não fazem parte do escopo desta fase: API independente, autenticação, armazenamento de simulações e fusão com as modalidades textual ou visual.
+- `sintoma_1`;
+- `sintoma_2`;
+- `doenca_associada`;
+- `nivel_prioridade`.
 
-## Resultados principais
+Os nomes representam associações didáticas, não diagnósticos.
 
-O conjunto de teste estratificado contém 61 pacientes, sendo 28 com desfecho positivo.
+### Extração
+
+`fase2/src/extrair_sintomas.py`:
+
+- normaliza caixa, acentuação, pontuação e espaços;
+- identifica uma ou mais expressões;
+- agrega associações do mapa;
+- trata relatos sem correspondência;
+- processa automaticamente as 10 frases.
+
+## Entrega obrigatória — Parte 2
+
+### Dataset textual
+
+`fase2/dados/classificacao_risco.csv` possui 120 frases simuladas:
+
+| Classe | Feminino | Masculino | Total |
+|---|---:|---:|---:|
+| Alto risco | 30 | 30 | 60 |
+| Baixo risco | 30 | 30 | 60 |
+
+Cada cenário possui versões feminina e masculina com o mesmo rótulo. O identificador `id_cenario` mantém as duas versões no mesmo conjunto durante a divisão, evitando vazamento entre exemplos quase equivalentes.
+
+### Classificador
+
+`fase2/src/classificar_risco_texto.py` implementa:
+
+- divisão estratificada e agrupada por cenário;
+- TF-IDF com unigramas e bigramas;
+- Regressão Logística balanceada;
+- acurácia, precisão, recall, F1 e ROC AUC;
+- matriz de confusão;
+- termos associados a cada classe;
+- análise contrafactual por sexo;
+- persistência do modelo e dos resultados.
+
+### Resultado textual
+
+O teste possui 24 frases pertencentes a 12 cenários nunca usados no treino.
 
 | Métrica | Resultado |
 |---|---:|
-| Acurácia | 86,9% |
-| Precisão | 81,3% |
-| Sensibilidade/recall | 92,9% |
-| F1 | 86,7% |
-| ROC AUC | 0,958 |
+| Acurácia | 100,0% |
+| Precisão — alto risco | 100,0% |
+| Recall — alto risco | 100,0% |
+| F1 — alto risco | 100,0% |
+| ROC AUC | 1,000 |
+| Maior diferença contrafactual por sexo | 0,0033 |
 
-A Regressão Logística foi selecionada pela maior ROC AUC média na validação cruzada do conjunto de treino. A diferença em relação ao Random Forest foi pequena e não demonstra superioridade universal.
+O desempenho perfeito não deve ser generalizado: a base é pequena, simulada e deliberadamente separável. O resultado apenas confirma o funcionamento do pipeline no conjunto demonstrativo.
 
-### Avaliação descritiva por sexo
+### Notebook
 
-| Sexo | n | Positivos | Acurácia | Precisão | Sensibilidade | F1 | ROC AUC |
-|---|---:|---:|---:|---:|---:|---:|---:|
-| Feminino | 20 | 7 | 95,0% | 100,0% | 85,7% | 92,3% | 1,000 |
-| Masculino | 41 | 21 | 82,9% | 76,9% | 95,2% | 85,1% | 0,938 |
+`fase2/notebooks/classificacao_textual_tfidf.ipynb` apresenta dados, separação, TF-IDF, treinamento, métricas, matriz de confusão, termos influentes, análise de viés e limitações.
 
-Os grupos são pequenos e desbalanceados. As diferenças são apenas descritivas e não sustentam conclusões de equidade ou desempenho clínico.
+## Feedback da Fase 1
 
-## Protocolo experimental
+- **Desempenho por sexo:** o modelo tabular continua avaliado separadamente por sexo.
+- **Viés textual:** pares contrafactuais verificam se o marcador feminino/masculino muda a previsão para sintomas equivalentes.
+- **Separação:** registros tabulares são separados por paciente; pares textuais, por cenário; imagens, por hash de exame único.
+- **Ausência de ID visual:** a fonte das imagens não fornece identificador de paciente, portanto a separação por indivíduo não pode ser garantida e é registrada como limitação.
+- **Prevalência:** nenhum balanceamento textual ou visual é apresentado como prevalência clínica.
+- **Modalidades:** texto, tabela e imagem possuem pipelines, métricas e notebooks independentes.
 
-1. Carregar `assets/dados/processed/heart_disease_cleveland.csv`.
-2. Separar atributos e alvo antes de ajustar qualquer transformação.
-3. Fazer divisão estratificada de 80% para treino e 20% para teste, com semente 42.
-4. Ajustar imputação, codificação e padronização somente dentro do treino por meio de `Pipeline`.
-5. Comparar Regressão Logística e Random Forest com validação cruzada estratificada em cinco folds.
-6. Selecionar o modelo pela ROC AUC média da validação, sem consultar o teste.
-7. Avaliar uma única vez no teste com acurácia, precisão, recall, F1 e ROC AUC.
-8. Avaliar as mesmas métricas separadamente para os grupos feminino e masculino.
-9. Estimar intervalos de confiança de 95% com 2.000 reamostragens bootstrap.
-10. Examinar discriminação, calibração e influência das variáveis.
-11. Treinar uma cópia da Regressão Logística com toda a base exclusivamente para o front.
+## Extensão tabular
 
-## Pré-processamento
+A Regressão Logística e o Random Forest são comparados com a base Cleveland. A Regressão Logística foi selecionada pela ROC AUC média na validação cruzada.
 
-- Campos numéricos ausentes: imputação pela mediana do conjunto de treino.
-- Campos categóricos ausentes: imputação pela categoria mais frequente no treino.
-- Campos categóricos: codificação one-hot.
-- Campos numéricos: padronização.
-- Todas as transformações ficam dentro do pipeline para evitar vazamento de dados.
+| Acurácia | Precisão | Sensibilidade | F1 | ROC AUC |
+|---:|---:|---:|---:|---:|
+| 86,9% | 81,3% | 92,9% | 86,7% | 0,958 |
 
-## Decisões relacionadas ao feedback da Fase 1
+Esse módulo permanece como extensão e não substitui a atividade textual.
 
-- **Avaliação demográfica:** desempenho reportado separadamente por sexo e interpretado com cautela.
-- **Separação por indivíduo:** a base tabular possui uma linha por paciente, permitindo divisão no nível do paciente.
-- **Prevalência:** a amostra visual balanceada da Fase 1 não é usada para inferir prevalência.
-- **Modalidades independentes:** somente os dados numéricos são utilizados nesta fase.
-- **Reprodutibilidade:** sementes, configurações, métricas e previsões são registradas durante a execução.
+## Ir Além 1 — React + Vite
 
-## Estrutura
+O código está em `portal-cardioia/` e inclui:
+
+- autenticação simulada com Context API;
+- JWT fictício no localStorage;
+- rotas protegidas;
+- pacientes carregados de JSON por camada de serviço;
+- busca de pacientes;
+- agendamento com `useState` e `useReducer`;
+- dashboard;
+- CSS Modules responsivo;
+- testes funcionais e build de produção.
+
+A transferência para o repositório separado exigido e a publicação dos integrantes/RMs permanecem pendentes de ação/autorização.
+
+## Ir Além 2 — MLP de ECG
+
+`fase2/notebooks/mlp_ecg_binaria.ipynb` e `fase2/src/treinar_mlp_ecg.py` implementam uma MLP Keras sobre imagens 64 × 64 em tons de cinza.
+
+O experimento binário usa 30 imagens normais e 30 anormais selecionadas deterministicamente das três classes anormais.
+
+| Métrica | Resultado |
+|---|---:|
+| Acurácia | 41,7% |
+| Acurácia balanceada | 41,7% |
+| Precisão — anormal | 33,3% |
+| Recall — anormal | 16,7% |
+| F1 — anormal | 22,2% |
+| ROC AUC | 0,667 |
+
+O baixo desempenho é mantido de forma transparente. Ele mostra que a pequena amostra e uma MLP simples sobre pixels achatados não sustentam generalização. Implementação funcional não equivale a modelo clinicamente útil.
+
+## Estrutura da Fase 2
 
 ```text
 fase2/
 ├── app.py
-├── README.md
-├── requirements.txt
+├── CHECKLIST_ENUNCIADO.md
+├── dados/
+│   ├── classificacao_risco.csv
+│   ├── mapa_conhecimento.csv
+│   └── relatos_sintomas.txt
 ├── notebooks/
-│   └── analise_baseline.ipynb
+│   ├── analise_baseline.ipynb
+│   ├── classificacao_textual_tfidf.ipynb
+│   └── mlp_ecg_binaria.ipynb
 ├── src/
 │   ├── analisar_modelo.py
-│   └── treinar_baselines.py
+│   ├── classificar_risco_texto.py
+│   ├── extrair_sintomas.py
+│   ├── treinar_baselines.py
+│   └── treinar_mlp_ecg.py
 ├── tests/
 │   ├── auditar_cenarios.py
-│   └── test_app.py
-└── resultados/
-    └── README.md
+│   ├── test_app.py
+│   ├── test_nlp.py
+│   └── test_visual.py
+├── requirements.txt
+└── requirements-visual.txt
 ```
 
-Os scripts geram métricas, previsões, gráficos, modelo serializado e uma cópia executada do notebook dentro de `fase2/resultados/`.
-
-## Como executar
+## Execução principal
 
 Pré-requisito: Python 3.12.
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate
 pip install -r fase2/requirements.txt
-python fase2/src/treinar_baselines.py
-python fase2/src/analisar_modelo.py
+python fase2/src/extrair_sintomas.py
+python fase2/src/classificar_risco_texto.py
+jupyter nbconvert --to notebook --execute fase2/notebooks/classificacao_textual_tfidf.ipynb
 streamlit run fase2/app.py
 ```
 
-No Windows, use `.venv\Scripts\activate` para ativar o ambiente.
+## Execução visual
 
-Para executar o notebook integralmente:
+As dependências do TensorFlow foram isoladas para não tornar o deploy do Streamlit pesado.
 
 ```bash
-jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb --output-dir fase2/resultados --output analise_baseline_executada.ipynb
+pip install -r fase2/requirements-visual.txt
+python fase2/tests/test_visual.py
+python fase2/src/treinar_mlp_ecg.py
 ```
 
 ## Validação automática
 
-O workflow `.github/workflows/fase2-baseline.yml`:
+- `.github/workflows/fase2-baseline.yml`: NLP, portal React, Streamlit, modelo tabular e notebooks.
+- `.github/workflows/fase2-visual.yml`: dados visuais, arquitetura, MLP, notebook e artifacts.
 
-- verifica a sintaxe;
-- testa a inicialização do Streamlit;
-- executa uma simulação completa;
-- audita cenários sintéticos;
-- treina e avalia os modelos;
-- executa as análises e o notebook;
-- confere todas as saídas obrigatórias.
+Consulte `fase2/CHECKLIST_ENUNCIADO.md` para a correspondência completa entre requisitos, arquivos e pendências.
 
-## Limitações
+## Limitações gerais
 
-- apenas 303 registros de uma única instituição;
-- dados coletados nos Estados Unidos na década de 1980;
-- ausência de representatividade brasileira;
-- distribuição desigual entre os sexos;
-- avaliação por sexo baseada em subgrupos pequenos;
-- ausência de validação clínica, prospectiva e externa;
-- probabilidades não devem ser interpretadas como risco individual;
-- valores ausentes imputados adicionam incerteza;
-- associações aprendidas pelo modelo não demonstram causalidade.
+- bases pequenas, simuladas ou históricas;
+- ausência de validação externa, clínica e prospectiva;
+- desempenho textual perfeito decorrente de base didática separável;
+- baixo desempenho da MLP visual;
+- ausência de identificador de paciente na fonte visual;
+- balanceamentos artificiais que não representam prevalência;
+- dados textuais, tabulares e visuais de pessoas e fontes diferentes;
+- saídas não apropriadas para uso assistencial.
 
 ## Privacidade
 
-O front não utiliza API própria nem banco de dados e não armazena os valores preenchidos. A interface orienta o uso exclusivo de dados fictícios e proíbe informações identificáveis.
+O front não usa API própria nem banco de dados e não armazena relatos. Use apenas exemplos fictícios e nunca forneça nome, CPF, prontuário ou outra informação identificável.
