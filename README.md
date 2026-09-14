@@ -24,7 +24,7 @@
 
 ## 📜 Descrição
 
-O **CardioIA** é um projeto acadêmico da FIAP desenvolvido ao longo de 7 fases. A **Fase 1 — "Batimentos de Dados: Mapeando o Coração Moderno"** reuniu, validou e documentou dados numéricos, textuais e visuais relacionados à saúde cardiovascular. A **Fase 2 — Machine Learning** utiliza exclusivamente a modalidade numérica para comparar classificadores supervisionados e disponibilizar uma interface acadêmica transparente.
+O **CardioIA** é um projeto acadêmico da FIAP desenvolvido ao longo de 7 fases. A **Fase 1 — "Batimentos de Dados: Mapeando o Coração Moderno"** reuniu, validou e documentou dados numéricos, textuais e visuais relacionados à saúde cardiovascular. A **Fase 2 — Machine Learning** tem como entrega obrigatória uma solução de NLP para extrair sintomas de relatos e classificar risco cardiovascular com TF-IDF. O projeto também vai além com um portal React, um experimento visual com MLP e a manutenção do modelo tabular da base Cleveland como extensão acadêmica.
 
 > **Uso exclusivamente educacional.** O projeto não realiza diagnóstico, não estima risco clínico real e não substitui avaliação médica.
 
@@ -41,30 +41,33 @@ Todas as três partes seguiram um processo de **governança de dados** com aten�
 
 ## 🧠 Fase 2 — Machine Learning
 
-A Fase 2 usa as 13 variáveis clínicas da base Heart Disease — Cleveland para comparar Regressão Logística e Random Forest. O modelo é selecionado pela ROC AUC média em validação cruzada estratificada, antes da avaliação única no conjunto de teste.
+A entrega obrigatória da Fase 2 está organizada em duas partes independentes:
 
-Principais entregas:
+1. **Extração de sintomas:** dez relatos simulados completos em `.txt`, mapa de conhecimento sintoma–doença em CSV e um extrator Python tolerante a maiúsculas, acentos e pontuação.
+2. **Classificação textual de risco:** base simulada com 120 frases únicas e balanceadas, vetorização TF-IDF, Regressão Logística, divisão treino/teste agrupada por cenário e avaliação de desempenho e viés.
 
-- pipeline reprodutível de imputação, codificação, padronização e treinamento;
-- comparação de modelos e avaliação no conjunto de teste;
-- métricas separadas por sexo e intervalos de confiança por bootstrap;
-- matriz de confusão, curvas ROC, precisão-recall e calibração;
-- interpretação das variáveis e auditoria de cenários;
-- notebook narrado;
-- testes automatizados;
-- front acadêmico publicado em Streamlit.
+Também foram implementados os dois desafios **Ir Além**:
+
+- **Portal React + Vite:** autenticação simulada com token local, rotas protegidas, pacientes, agendamentos e dashboard, com testes automatizados;
+- **Classificação visual de ECG:** experimento binário normal/anormal com 60 exames equilibrados, pré-processamento em escala de cinza 64×64 e MLP Keras, mantendo exames sem duplicação entre treino e teste.
+
+Como extensão adicional, o projeto preserva o modelo tabular da base Heart Disease — Cleveland e sua aplicação Streamlit. As três modalidades são apresentadas de forma separada para evitar a falsa impressão de um sistema multimodal clínico.
 
 **Aplicação:** [cardioia-fiap.streamlit.app](https://cardioia-fiap.streamlit.app/)
 
-**Documentação completa:** [fase2/README.md](fase2/README.md)
+**Documentação completa:** [fase2/README.md](fase2/README.md)  
+**Checklist do enunciado:** [fase2/CHECKLIST_ENUNCIADO.md](fase2/CHECKLIST_ENUNCIADO.md)  
+**Resultados reproduzíveis:** [fase2/resultados/README.md](fase2/resultados/README.md)
 
-Resultados principais no conjunto de teste com 61 pacientes:
+Resultados dos experimentos:
 
-| Acurácia | Precisão | Sensibilidade | F1 | ROC AUC |
-|---:|---:|---:|---:|---:|
-| 86,9% | 81,3% | 92,9% | 86,7% | 0,958 |
+| Experimento | Amostra de teste | Resultado principal |
+|---|---:|---:|
+| NLP — TF-IDF + Regressão Logística | 24 frases | acurácia 100,0% |
+| Tabular — Cleveland | 61 registros | ROC AUC 0,958 |
+| Visual — MLP de ECG | 12 exames | acurácia balanceada 41,7% |
 
-As métricas são experimentais e foram obtidas em uma amostra pequena, histórica e sem validação clínica ou externa.
+> Os dados textuais são simulados e intencionalmente separáveis; por isso, 100% no teste não demonstra validade clínica. O resultado visual baixo foi mantido de forma transparente, sem ajuste sobre o teste. Nenhum experimento realiza diagnóstico nem foi validado para uso assistencial.
 
 ## 📁 Estrutura de pastas
 
@@ -129,20 +132,39 @@ python scripts/preparar_amostra_ecg.py
 
 ## ▶️ Como executar a Fase 2
 
-A aplicação já está disponível publicamente e não exige execução local para avaliação:
+A aplicação pública pode ser avaliada sem usar o terminal:
 
 - [Abrir CardioIA](https://cardioia-fiap.streamlit.app/)
 
-Para reprodução técnica com Python 3.12:
+Para reprodução técnica da entrega obrigatória de NLP com Python 3.12:
 
 ```bash
 pip install -r fase2/requirements.txt
-python fase2/src/treinar_baselines.py
-python fase2/src/analisar_modelo.py
+python fase2/src/extrair_sintomas.py
+python fase2/src/classificar_risco_texto.py
+pytest -q fase2/tests/test_nlp.py fase2/tests/test_app.py
 streamlit run fase2/app.py
 ```
 
-O workflow do GitHub Actions verifica automaticamente sintaxe, inicialização e envio da simulação, auditoria de cenários, treinamento, análises, notebook e saídas obrigatórias.
+Para o portal React:
+
+```bash
+cd portal-cardioia
+npm install
+npm test
+npm run build
+npm run dev
+```
+
+Para o experimento visual, use o ambiente separado com TensorFlow:
+
+```bash
+pip install -r fase2/requirements-visual.txt
+pytest -q fase2/tests/test_visual.py
+python fase2/src/treinar_mlp_ecg.py
+```
+
+Os workflows do GitHub Actions executam automaticamente os testes, treinamentos, notebooks, build do portal e validação das saídas obrigatórias. Os resultados ficam disponíveis como artefatos dos workflows.
 
 ## 🗃 Histórico de lançamentos
 
@@ -160,6 +182,8 @@ O workflow do GitHub Actions verifica automaticamente sintaxe, inicialização e
     * Fase 2: análises de incerteza, calibração, interpretação e desempenho por sexo concluídas.
 * 0.7.0 - 14/09/2026
     * Fase 2: front acadêmico publicado, auditado e coberto por testes automatizados.
+* 0.8.0 - 14/09/2026
+    * Fase 2: entrega obrigatória de NLP, portal React e experimento visual com MLP implementados e documentados.
 
 ## 📋 Licença
 
