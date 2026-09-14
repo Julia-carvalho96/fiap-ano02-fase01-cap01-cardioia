@@ -57,7 +57,9 @@ Como extensão adicional, o projeto preserva o modelo tabular da base Heart Dise
 
 **Documentação completa:** [fase2/README.md](fase2/README.md)  
 **Checklist do enunciado:** [fase2/CHECKLIST_ENUNCIADO.md](fase2/CHECKLIST_ENUNCIADO.md)  
-**Resultados reproduzíveis:** [fase2/resultados/README.md](fase2/resultados/README.md)
+**Resultados reproduzíveis:** [fase2/resultados/README.md](fase2/resultados/README.md)  
+**Relatório de entrega:** [fase2/RELATORIO_ENTREGA.md](fase2/RELATORIO_ENTREGA.md)  
+**Roteiros dos vídeos:** [fase2/ROTEIRO_VIDEO.md](fase2/ROTEIRO_VIDEO.md)
 
 Resultados dos experimentos:
 
