@@ -149,6 +149,28 @@ def formatar_categoria(valor: str) -> str:
     return ROTULOS_CATEGORIAS.get(valor, valor.replace("_", " ").capitalize())
 
 
+def resumir_registro(registro: pd.DataFrame) -> pd.DataFrame:
+    """Formata os valores efetivamente enviados ao modelo."""
+    linhas = []
+    for variavel, valor in registro.iloc[0].items():
+        if pd.isna(valor):
+            valor_exibido = "Não informado — preenchido automaticamente"
+        elif isinstance(valor, str):
+            valor_exibido = formatar_categoria(valor)
+        elif float(valor).is_integer():
+            valor_exibido = str(int(valor))
+        else:
+            valor_exibido = f"{float(valor):.1f}"
+
+        linhas.append(
+            {
+                "Campo": ROTULOS_VARIAVEIS.get(variavel, variavel),
+                "Valor utilizado": valor_exibido,
+            }
+        )
+    return pd.DataFrame(linhas)
+
+
 def criar_formulario() -> pd.DataFrame | None:
     st.subheader("Dados da simulação")
     st.caption(
@@ -175,6 +197,10 @@ def criar_formulario() -> pd.DataFrame | None:
                     "assintomatico",
                 ],
                 format_func=formatar_categoria,
+                help=(
+                    "Descreve o tipo de dor registrado. É diferente do campo "
+                    "'Angina induzida por exercício'."
+                ),
             )
             pressao = st.number_input(
                 "Pressão arterial em repouso (mm Hg)",
@@ -329,13 +355,17 @@ def explicar_predicao(modelo, registro: pd.DataFrame) -> pd.DataFrame:
 
     tabela = pd.DataFrame(linhas)
     tabela["Magnitude"] = tabela["Contribuição"].abs()
-    return tabela.sort_values("Magnitude", ascending=False).head(6)
+    return tabela.sort_values("Magnitude", ascending=False)
 
 
 def mostrar_resultado(registro: pd.DataFrame) -> None:
     modelo = obter_modelo()
     probabilidade = float(modelo.predict_proba(registro)[0, 1])
-    classe = "Presença" if probabilidade >= 0.5 else "Ausência"
+    classe = (
+        "Padrão compatível com presença"
+        if probabilidade >= 0.5
+        else "Padrão compatível com ausência"
+    )
 
     st.markdown("---")
     st.subheader("Resultado da simulação")
@@ -345,12 +375,12 @@ def mostrar_resultado(registro: pd.DataFrame) -> None:
         st.markdown(
             f"""
             <div class="result-card">
-                <div class="muted">Probabilidade produzida pelo modelo</div>
+                <div class="muted">Estimativa para o desfecho da base Cleveland</div>
                 <div class="result-number">{probabilidade:.1%}</div>
-                <p><strong>Classe estimada:</strong> {classe}</p>
+                <p><strong>Classe matemática:</strong> {classe}</p>
                 <p class="muted">
-                    O corte acadêmico usado para transformar a probabilidade em
-                    classe é 50%.
+                    Desfecho estudado: presença de estreitamento angiográfico
+                    acima de 50%. Corte acadêmico para classificação: 50%.
                 </p>
             </div>
             """,
@@ -360,28 +390,87 @@ def mostrar_resultado(registro: pd.DataFrame) -> None:
 
     with coluna_contexto:
         st.warning(
-            "Este resultado não indica diagnóstico, risco clínico real nem "
-            "necessidade de tratamento. Não use a simulação para tomar decisões "
-            "de saúde."
+            "Este percentual não é a chance geral de uma pessoa ter doença "
+            "cardíaca. Ele não realiza diagnóstico, não mede risco de infarto e "
+            "não deve orientar decisões de saúde."
         )
         st.write(
-            "O percentual mostra apenas o comportamento matemático de um modelo "
-            "treinado em 303 registros históricos da Cleveland Clinic."
+            "Leia o número apenas como a estimativa produzida por uma Regressão "
+            "Logística para o desfecho específico da base Cleveland, composta "
+            "por 303 registros históricos."
         )
 
-    st.subheader("Fatores que mais influenciaram esta simulação")
+    campos_ausentes = [
+        ROTULOS_VARIAVEIS[coluna]
+        for coluna in ["num_vasos_principais", "resultado_thal"]
+        if pd.isna(registro.iloc[0][coluna])
+    ]
+    if campos_ausentes:
+        st.warning(
+            f"Campos não informados: {', '.join(campos_ausentes)}. O pipeline "
+            "preencheu automaticamente valores ausentes usando a mediana para "
+            "campos numéricos e a categoria mais frequente para categóricos. "
+            "Isso não significa que esses exames sejam normais."
+        )
+
+    with st.expander("Conferir os valores usados na simulação"):
+        st.dataframe(
+            resumir_registro(registro),
+            use_container_width=True,
+            hide_index=True,
+        )
+
+    st.subheader("O que mais influenciou o resultado")
     st.caption(
-        "As contribuições mostram como o modelo combinou as variáveis neste "
-        "registro. Associação estatística não significa causalidade."
+        "Os valores abaixo são forças relativas dentro do cálculo — não são "
+        "pontos percentuais. Associação estatística não significa causalidade."
     )
     explicacao = explicar_predicao(modelo, registro)
-    st.dataframe(
-        explicacao[["Fator", "Efeito", "Contribuição"]].style.format(
-            {"Contribuição": "{:+.3f}"}
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
+    aumentaram = explicacao[explicacao["Contribuição"] > 0].head(4)
+    reduziram = explicacao[explicacao["Contribuição"] < 0].head(4)
+
+    coluna_aumentaram, coluna_reduziram = st.columns(2, gap="large")
+    with coluna_aumentaram:
+        st.markdown("#### Aumentaram a estimativa")
+        if aumentaram.empty:
+            st.caption("Nenhum fator entre os de maior influência.")
+        else:
+            tabela_aumentaram = aumentaram[["Fator", "Magnitude"]].rename(
+                columns={"Magnitude": "Força relativa"}
+            )
+            st.dataframe(
+                tabela_aumentaram.style.format({"Força relativa": "{:.3f}"}),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    with coluna_reduziram:
+        st.markdown("#### Reduziram a estimativa")
+        if reduziram.empty:
+            st.caption("Nenhum fator entre os de maior influência.")
+        else:
+            tabela_reduziram = reduziram[["Fator", "Magnitude"]].rename(
+                columns={"Magnitude": "Força relativa"}
+            )
+            st.dataframe(
+                tabela_reduziram.style.format({"Força relativa": "{:.3f}"}),
+                use_container_width=True,
+                hide_index=True,
+            )
+
+    with st.expander("Por que alguns resultados parecem contraintuitivos?"):
+        st.write(
+            "O modelo aprende associações desta amostra histórica, não regras "
+            "médicas universais. Por exemplo, na base usada, o desfecho positivo "
+            "apareceu em 30,4% dos 23 registros com angina típica e em 72,9% dos "
+            "144 registros assintomáticos. Por isso, 'angina típica' pode reduzir "
+            "a estimativa do modelo, sem indicar proteção clínica."
+        )
+        st.write(
+            "Também são campos diferentes: **tipo de dor no peito** descreve o "
+            "padrão da dor; **angina induzida por exercício** informa se ela "
+            "apareceu durante esforço."
+        )
 
 
 def pagina_desempenho() -> None:
