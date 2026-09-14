@@ -16,7 +16,7 @@ Auditoria feita a partir do enunciado oficial enviado em 14/09/2026 e do feedbac
 | Notebook comentado | `fase2/notebooks/classificacao_textual_tfidf.ipynb` | Concluído |
 | Repositório público | Repositório atual | Concluído |
 | README completo | `README.md` e `fase2/README.md` | Concluído |
-| Vídeo de até 4 minutos, não listado | Link ainda não fornecido | **Pendente** |
+| Vídeo de até 4 minutos, não listado | Roteiro em `fase2/ROTEIRO_VIDEO.md`; link ainda não fornecido | **Pendente** |
 
 ## Ir Além 1 — Portal React
 
@@ -34,7 +34,7 @@ Auditoria feita a partir do enunciado oficial enviado em 14/09/2026 e do feedbac
 | Build de produção | Validada no GitHub Actions | Concluído |
 | Repositório público separado | Código preparado no monorepo | **Pendente de criação/transferência** |
 | Integrantes e RMs no novo README | Exige autorização explícita para nova publicação | **Pendente** |
-| Vídeo de até 4 minutos | Link ainda não fornecido | **Pendente** |
+| Vídeo de até 4 minutos | Roteiro em `fase2/ROTEIRO_VIDEO.md`; link ainda não fornecido | **Pendente** |
 
 ## Ir Além 2 — MLP visual
 
