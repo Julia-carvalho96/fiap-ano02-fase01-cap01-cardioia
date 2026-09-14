@@ -37,10 +37,11 @@ jobs:
           python -m py_compile fase2/app.py
           python -m py_compile fase2/src/treinar_baselines.py
           python -m py_compile fase2/src/analisar_modelo.py
+          python -m py_compile fase2/tests/test_app.py
 
       - name: Testar inicialização do front
         run: |
-          streamlit run fase2/app.py             --server.headless true             --server.port 8501             > /tmp/cardioia-streamlit.log 2>&1 &
+          streamlit run fase2/app.py --server.headless true --server.port 8501 > /tmp/cardioia-streamlit.log 2>&1 &
           app_pid=$!
           trap 'kill "$app_pid" 2>/dev/null || true' EXIT
 
@@ -54,6 +55,9 @@ jobs:
           cat /tmp/cardioia-streamlit.log
           exit 1
 
+      - name: Testar envio da simulação
+        run: python fase2/tests/test_app.py
+
       - name: Executar treinamento
         run: python fase2/src/treinar_baselines.py
 
@@ -62,7 +66,7 @@ jobs:
 
       - name: Executar notebook
         run: |
-          jupyter nbconvert             --to notebook             --execute fase2/notebooks/analise_baseline.ipynb             --output-dir fase2/resultados             --output analise_baseline_executada.ipynb             --ExecutePreprocessor.timeout=300
+          jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb --output-dir fase2/resultados --output analise_baseline_executada.ipynb --ExecutePreprocessor.timeout=300
 
       - name: Conferir saídas obrigatórias
         run: |
