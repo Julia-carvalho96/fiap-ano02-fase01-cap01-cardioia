@@ -6,7 +6,7 @@
 
 <br>
 
-# CardioIA — Fase 1: Batimentos de Dados
+# CardioIA — Fases 1 e 2
 
 ## Grupo Aura
 
@@ -24,7 +24,9 @@
 
 ## 📜 Descrição
 
-O **CardioIA** é um projeto acadêmico da FIAP que simula, ao longo de 7 fases, um ecossistema de cardiologia inteligente, integrando dados clínicos, IoT, Machine Learning, Visão Computacional e NLP para apoiar o cuidado cardiovascular. Nesta **Fase 1 — "Batimentos de Dados: Mapeando o Coração Moderno"**, o papel assumido pela equipe é o de cientista de dados hospitalar: buscar, organizar, validar e documentar três tipos de dados fundamentais para a saúde cardiovascular — numéricos, textuais e visuais — que servirão de base para as fases seguintes do curso (diagnóstico automatizado por IA, monitoramento via IoT, visão computacional em exames e assistente virtual por NLP).
+O **CardioIA** é um projeto acadêmico da FIAP desenvolvido ao longo de 7 fases. A **Fase 1 — "Batimentos de Dados: Mapeando o Coração Moderno"** reuniu, validou e documentou dados numéricos, textuais e visuais relacionados à saúde cardiovascular. A **Fase 2 — Machine Learning** utiliza exclusivamente a modalidade numérica para comparar classificadores supervisionados e disponibilizar uma interface acadêmica transparente.
+
+> **Uso exclusivamente educacional.** O projeto não realiza diagnóstico, não estima risco clínico real e não substitui avaliação médica.
 
 O repositório está disponível em [github.com/murilosalla-blip/fiap-ano02-fase01-cap01-cardioia](https://github.com/murilosalla-blip/fiap-ano02-fase01-cap01-cardioia).
 
@@ -36,6 +38,33 @@ O repositório está disponível em [github.com/murilosalla-blip/fiap-ano02-fase
 
 Todas as três partes seguiram um processo de **governança de dados** com atenção à proveniência, privacidade, qualidade e rastreabilidade. Limitações e possíveis vieses identificados, detalhados nos documentos específicos em `document/other/documentacao/`: a Parte 1 usa uma base originada na Cleveland Clinic (EUA, década de 1980), sem representatividade populacional garantida para outros contextos; a Parte 2 usa textos institucionais brasileiros de linguagem técnica (não espontânea de pacientes), sendo que um dos materiais tem contexto temporal mais antigo (2006); a Parte 3 usa um dataset originado no Paquistão, com possíveis vieses de população e de equipamento de aquisição, e a amostra curada e balanceada não representa necessariamente a prevalência real das condições nas classes.
 
+
+## 🧠 Fase 2 — Machine Learning
+
+A Fase 2 usa as 13 variáveis clínicas da base Heart Disease — Cleveland para comparar Regressão Logística e Random Forest. O modelo é selecionado pela ROC AUC média em validação cruzada estratificada, antes da avaliação única no conjunto de teste.
+
+Principais entregas:
+
+- pipeline reprodutível de imputação, codificação, padronização e treinamento;
+- comparação de modelos e avaliação no conjunto de teste;
+- métricas separadas por sexo e intervalos de confiança por bootstrap;
+- matriz de confusão, curvas ROC, precisão-recall e calibração;
+- interpretação das variáveis e auditoria de cenários;
+- notebook narrado;
+- testes automatizados;
+- front acadêmico publicado em Streamlit.
+
+**Aplicação:** [cardioia-fiap.streamlit.app](https://cardioia-fiap.streamlit.app/)
+
+**Documentação completa:** [fase2/README.md](fase2/README.md)
+
+Resultados principais no conjunto de teste com 61 pacientes:
+
+| Acurácia | Precisão | Sensibilidade | F1 | ROC AUC |
+|---:|---:|---:|---:|---:|
+| 86,9% | 81,3% | 92,9% | 86,7% | 0,958 |
+
+As métricas são experimentais e foram obtidas em uma amostra pequena, histórica e sem validação clínica ou externa.
 
 ## 📁 Estrutura de pastas
 
@@ -63,6 +92,7 @@ Nesta fase, os artefatos reais estão organizados assim dentro das pastas oficia
 - `document/other/documentacao/`: plano de execução e documentos de apoio das Partes 1, 2 e 3.
 - `document/other/referencias/`: enunciado e mapa mental oficiais, fontes institucionais utilizadas na Parte 2, rastreabilidade da Parte 3 e materiais de aula da Fase 1.
 - `scripts/`: scripts de preparação/reprodução dos datasets.
+- `fase2/`: treinamento, análises, notebook, testes, resultados documentados e aplicação Streamlit da Fase 2.
 
 ## 🔗 Links externos
 
@@ -97,6 +127,23 @@ python scripts/preparar_amostra_ecg.py
 ```
 
 
+## ▶️ Como executar a Fase 2
+
+A aplicação já está disponível publicamente e não exige execução local para avaliação:
+
+- [Abrir CardioIA](https://cardioia-fiap.streamlit.app/)
+
+Para reprodução técnica com Python 3.12:
+
+```bash
+pip install -r fase2/requirements.txt
+python fase2/src/treinar_baselines.py
+python fase2/src/analisar_modelo.py
+streamlit run fase2/app.py
+```
+
+O workflow do GitHub Actions verifica automaticamente sintaxe, inicialização e envio da simulação, auditoria de cenários, treinamento, análises, notebook e saídas obrigatórias.
+
 ## 🗃 Histórico de lançamentos
 
 * 0.1.0 - 21/08/2026
@@ -107,6 +154,12 @@ python scripts/preparar_amostra_ecg.py
     * Parte 2 concluída: corpus textual (prevenção cardiovascular e síndromes coronarianas agudas) preparado e documentado.
 * 0.4.0 - 21/08/2026
     * Parte 3 concluída: amostra de 120 imagens de ECG curada, validada e documentada.
+* 0.5.0 - 14/09/2026
+    * Fase 2: pipeline de Machine Learning, comparação de modelos e avaliação concluídos.
+* 0.6.0 - 14/09/2026
+    * Fase 2: análises de incerteza, calibração, interpretação e desempenho por sexo concluídas.
+* 0.7.0 - 14/09/2026
+    * Fase 2: front acadêmico publicado, auditado e coberto por testes automatizados.
 
 ## 📋 Licença
 
