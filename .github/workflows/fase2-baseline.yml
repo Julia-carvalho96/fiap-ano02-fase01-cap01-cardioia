@@ -37,8 +37,20 @@ jobs:
           python -m py_compile fase2/app.py
           python -m py_compile fase2/src/treinar_baselines.py
           python -m py_compile fase2/src/analisar_modelo.py
+          python -m py_compile fase2/src/extrair_sintomas.py
+          python -m py_compile fase2/src/classificar_risco_texto.py
           python -m py_compile fase2/tests/test_app.py
           python -m py_compile fase2/tests/auditar_cenarios.py
+          python -m py_compile fase2/tests/test_nlp.py
+
+      - name: Validar extração de sintomas
+        run: python fase2/src/extrair_sintomas.py
+
+      - name: Testar entregáveis de NLP
+        run: python fase2/tests/test_nlp.py
+
+      - name: Gerar resultados do classificador textual
+        run: python fase2/src/classificar_risco_texto.py
 
       - name: Testar inicialização do front
         run: |
@@ -89,3 +101,9 @@ jobs:
           test -s fase2/resultados/graficos/distribuicao_alvo_por_sexo.png
           test -s fase2/resultados/graficos/importancia_variaveis.png
           test -s fase2/resultados/analise_baseline_executada.ipynb
+          test -s fase2/resultados/nlp/metricas_classificador_texto.json
+          test -s fase2/resultados/nlp/previsoes_teste_texto.csv
+          test -s fase2/resultados/nlp/vies_contrafactual_sexo.csv
+          test -s fase2/resultados/nlp/termos_influentes.csv
+          test -s fase2/resultados/nlp/classificador_risco_texto.joblib
+          test -s fase2/resultados/nlp/matriz_confusao_texto.png
