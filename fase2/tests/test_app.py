@@ -49,4 +49,36 @@ if "Campos não informados" not in alertas:
 if "não é a chance geral" not in alertas:
     raise AssertionError("O alerta contra interpretação clínica não foi exibido.")
 
-print("Front aberto, simulação executada e explicações exibidas com sucesso.")
+botoes_extracao = [
+    botao
+    for botao in app.button
+    if botao.label == "Identificar sintomas e associações"
+]
+if len(botoes_extracao) != 1:
+    raise AssertionError("O botão de extração textual não foi encontrado.")
+botoes_extracao[0].click()
+app.run(timeout=120)
+if app.exception:
+    raise AssertionError(f"A extração textual falhou: {app.exception}")
+if not any("Expressões encontradas" in str(item.value) for item in app.success):
+    raise AssertionError("A extração não exibiu as expressões identificadas.")
+
+botoes_risco = [
+    botao
+    for botao in app.button
+    if botao.label == "Classificar frase"
+]
+if len(botoes_risco) != 1:
+    raise AssertionError("O botão do classificador textual não foi encontrado.")
+botoes_risco[0].click()
+app.run(timeout=120)
+if app.exception:
+    raise AssertionError(f"A classificação textual falhou: {app.exception}")
+textos = " ".join(str(item.value) for item in app.markdown)
+if "Resultado do classificador textual acadêmico" not in textos:
+    raise AssertionError("O resultado textual não apareceu após o clique.")
+
+print(
+    "Front aberto; simulações tabular, extrativa e textual executadas "
+    "com explicações e alertas."
+)
