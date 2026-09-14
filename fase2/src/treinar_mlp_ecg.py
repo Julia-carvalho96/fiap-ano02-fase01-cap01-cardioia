@@ -64,11 +64,31 @@ def inventariar_imagens() -> pd.DataFrame:
                 "hash_sha256": hashlib.sha256(caminho.read_bytes()).hexdigest(),
             }
         )
-    dados = pd.DataFrame(linhas)
-    if len(dados) != 120:
-        raise ValueError(f"Esperadas 120 imagens; encontradas {len(dados)}.")
-    if dados["hash_sha256"].duplicated().any():
+    dados_completos = pd.DataFrame(linhas)
+    if len(dados_completos) != 120:
+        raise ValueError(
+            f"Esperadas 120 imagens; encontradas {len(dados_completos)}."
+        )
+    if dados_completos["hash_sha256"].duplicated().any():
         raise ValueError("A amostra contém imagens binárias duplicadas.")
+
+    normais = dados_completos[
+        dados_completos["classe_binaria"] == "normal"
+    ]
+    anormais = (
+        dados_completos[dados_completos["classe_binaria"] == "anormal"]
+        .groupby("classe_original", group_keys=False)
+        .sample(n=10, random_state=SEMENTE)
+    )
+    dados = pd.concat([normais, anormais], ignore_index=True).sample(
+        frac=1,
+        random_state=SEMENTE,
+    ).reset_index(drop=True)
+    if dados["classe_binaria"].value_counts().to_dict() != {
+        "normal": 30,
+        "anormal": 30,
+    }:
+        raise AssertionError("A amostra binária não ficou equilibrada.")
     return dados
 
 
@@ -78,7 +98,7 @@ def carregar_pixels(
     pixels = []
     for caminho in inventario["caminho"]:
         with Image.open(caminho) as imagem:
-            cinza = ImageOps.grayscale(imagem)
+            cinza = ImageOps.autocontrast(ImageOps.grayscale(imagem))
             redimensionada = cinza.resize(
                 TAMANHO_IMAGEM,
                 Image.Resampling.LANCZOS,
@@ -120,15 +140,16 @@ def criar_mlp(numero_entradas: int) -> tf.keras.Model:
     modelo = tf.keras.Sequential(
         [
             tf.keras.layers.Input(shape=(numero_entradas,)),
-            tf.keras.layers.Dense(64, activation="relu"),
-            tf.keras.layers.Dropout(0.25),
-            tf.keras.layers.Dense(24, activation="relu"),
+            tf.keras.layers.Dense(128, activation="relu"),
+            tf.keras.layers.BatchNormalization(),
+            tf.keras.layers.Dropout(0.35),
+            tf.keras.layers.Dense(32, activation="relu"),
             tf.keras.layers.Dense(1, activation="sigmoid"),
         ],
         name="mlp_ecg_binaria",
     )
     modelo.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
+        optimizer=tf.keras.optimizers.Adam(learning_rate=0.0005),
         loss="binary_crossentropy",
         metrics=[
             "accuracy",
@@ -140,7 +161,7 @@ def criar_mlp(numero_entradas: int) -> tf.keras.Model:
     return modelo
 
 
-def treinar_mlp(epocas: int = 18):
+def treinar_mlp(epocas: int = 40):
     fixar_sementes()
     inventario = inventariar_imagens()
     pixels = carregar_pixels(inventario)
@@ -153,11 +174,23 @@ def treinar_mlp(epocas: int = 18):
         teste_idx,
     ) = dividir_dados(inventario, pixels)
 
-    classes = np.unique(y_treino)
+    (
+        x_ajuste,
+        x_validacao,
+        y_ajuste,
+        y_validacao,
+    ) = train_test_split(
+        x_treino,
+        y_treino,
+        test_size=0.25,
+        random_state=SEMENTE,
+        stratify=y_treino,
+    )
+    classes = np.unique(y_ajuste)
     pesos = compute_class_weight(
         class_weight="balanced",
         classes=classes,
-        y=y_treino,
+        y=y_ajuste,
     )
     pesos_classe = {
         int(classe): float(peso)
@@ -168,16 +201,16 @@ def treinar_mlp(epocas: int = 18):
     callbacks = [
         tf.keras.callbacks.EarlyStopping(
             monitor="val_loss",
-            patience=4,
+            patience=7,
             restore_best_weights=True,
         )
     ]
     historico = modelo.fit(
-        x_treino,
-        y_treino,
-        validation_split=0.2,
+        x_ajuste,
+        y_ajuste,
+        validation_data=(x_validacao, y_validacao),
         epochs=epocas,
-        batch_size=12,
+        batch_size=8,
         class_weight=pesos_classe,
         callbacks=callbacks,
         verbose=0,
@@ -244,8 +277,8 @@ def salvar_resultados() -> dict[str, object]:
                 "separação por indivíduo."
             ),
             "prevalencia": (
-                "A amostra curada tem 30 imagens por classe original e não "
-                "representa prevalência clínica."
+                "A fonte curada tem 30 imagens por classe original; a amostra "
+                "binária usa 30 normais e 30 anormais e não representa prevalência clínica."
             ),
         },
     }
