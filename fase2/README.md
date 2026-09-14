@@ -11,20 +11,43 @@ Já existem:
 - avaliação geral e separada por sexo;
 - intervalos de confiança por bootstrap;
 - matriz de confusão, curvas ROC e precisão-recall;
-- análise de calibração;
-- interpretação das variáveis;
-- notebook narrado e validação automática.
+- análise de calibração e interpretação das variáveis;
+- notebook narrado;
+- front acadêmico em Streamlit;
+- validação automática do pipeline, notebook e inicialização do front.
 
 Ainda não existem:
 
-- front-end ou formulário para entrada de dados;
-- API para servir o modelo;
+- API independente para servir o modelo;
 - implantação pública;
+- autenticação ou armazenamento de simulações;
 - integração com as modalidades textual e visual.
 
-## Objetivo inicial
+## Objetivo
 
-Construir e comparar classificadores supervisionados para estimar a presença de doença cardíaca a partir das 13 variáveis clínicas. O resultado é acadêmico e exploratório e não deve ser usado para diagnóstico ou decisão clínica.
+Construir e comparar classificadores supervisionados para estimar a presença de doença cardíaca a partir das 13 variáveis clínicas e disponibilizar uma interface demonstrativa e transparente. O resultado é acadêmico e exploratório e não deve ser usado para diagnóstico ou decisão clínica.
+
+## Front acadêmico
+
+O arquivo `fase2/app.py` disponibiliza três áreas:
+
+1. **Simulação:** formulário com as 13 variáveis, probabilidade e classe produzidas pelo modelo.
+2. **Desempenho:** principais métricas gerais e avaliação descritiva por sexo.
+3. **Metodologia e limitações:** origem dos dados, limitações demográficas e cuidados de interpretação.
+
+A simulação também apresenta os fatores com maior contribuição local. Essas contribuições explicam o cálculo do modelo, mas não representam causalidade ou recomendação médica.
+
+O formulário não possui integração com banco de dados nem API externa. Mesmo assim, a própria tela orienta o uso exclusivo de dados fictícios e proíbe a inserção de informações identificáveis.
+
+### Executar o front
+
+Após instalar as dependências, execute na raiz do repositório:
+
+```bash
+streamlit run fase2/app.py
+```
+
+O navegador abrirá normalmente em `http://localhost:8501`.
 
 ## Protocolo experimental
 
@@ -38,6 +61,7 @@ Construir e comparar classificadores supervisionados para estimar a presença de
 8. Calcular as mesmas métricas separadamente para os grupos feminino e masculino.
 9. Estimar intervalos de confiança de 95% com 2.000 reamostragens bootstrap.
 10. Avaliar discriminação, calibração e influência das variáveis.
+11. Treinar uma cópia da Regressão Logística com toda a base exclusivamente para as simulações do front, depois de concluída a seleção experimental.
 
 ## Decisões relacionadas ao feedback da Fase 1
 
@@ -51,6 +75,7 @@ Construir e comparar classificadores supervisionados para estimar a presença de
 
 ```text
 fase2/
+├── app.py
 ├── README.md
 ├── requirements.txt
 ├── notebooks/
@@ -64,7 +89,7 @@ fase2/
 
 Os demais arquivos de `resultados/` são gerados ao executar o projeto e não precisam existir previamente.
 
-## Como executar
+## Como executar o projeto completo
 
 Na raiz do repositório:
 
@@ -74,6 +99,7 @@ source .venv/bin/activate
 pip install -r fase2/requirements.txt
 python fase2/src/treinar_baselines.py
 python fase2/src/analisar_modelo.py
+streamlit run fase2/app.py
 ```
 
 No Windows, a ativação do ambiente virtual pode ser feita com:
@@ -99,5 +125,3 @@ jupyter nbconvert --to notebook --execute fase2/notebooks/analise_baseline.ipynb
 - matriz de confusão;
 - curvas ROC, precisão-recall e calibração;
 - distribuição do alvo por sexo.
-
-A inclusão de um front-end deve ser tratada como uma camada posterior de demonstração. Antes disso, é necessário confirmar os requisitos completos do enunciado e fechar a análise metodológica do modelo.
