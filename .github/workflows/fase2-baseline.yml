@@ -44,6 +44,7 @@ jobs:
         working-directory: portal-cardioia
         run: |
           npm install --no-audit --no-fund
+          npm test
           npm run build
 
       - name: Verificar sintaxe
