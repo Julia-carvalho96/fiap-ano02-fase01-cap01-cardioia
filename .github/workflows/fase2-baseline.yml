@@ -38,6 +38,7 @@ jobs:
           python -m py_compile fase2/src/treinar_baselines.py
           python -m py_compile fase2/src/analisar_modelo.py
           python -m py_compile fase2/tests/test_app.py
+          python -m py_compile fase2/tests/auditar_cenarios.py
 
       - name: Testar inicialização do front
         run: |
@@ -57,6 +58,9 @@ jobs:
 
       - name: Testar envio da simulação
         run: python fase2/tests/test_app.py
+
+      - name: Auditar cenários sintéticos
+        run: python fase2/tests/auditar_cenarios.py
 
       - name: Executar treinamento
         run: python fase2/src/treinar_baselines.py
