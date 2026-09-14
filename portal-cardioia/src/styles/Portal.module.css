@@ -1,0 +1,52 @@
+.appShell { min-height: 100vh; display: grid; grid-template-columns: 250px 1fr; }
+.sidebar { background: linear-gradient(165deg, #50133f, #98175e); color: white; padding: 32px 24px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px; }
+.sidebar h1 { margin: 10px 0 0; font-size: 2rem; }
+.sidebar p { margin: 4px 0; color: #f5dce9; }
+.sidebar nav { display: grid; gap: 8px; }
+.sidebar nav a { padding: 12px 14px; border-radius: 12px; text-decoration: none; color: #fbeff5; }
+.sidebar nav a:hover, .sidebar nav a[aria-current="page"] { background: rgba(255,255,255,.15); color: white; }
+.badge { display: inline-flex; border: 1px solid currentColor; border-radius: 999px; padding: 5px 10px; font-size: .72rem; text-transform: uppercase; letter-spacing: .08em; }
+.mainContent { padding: 32px clamp(20px, 5vw, 72px) 64px; max-width: 1400px; width: 100%; }
+.demoNotice { display: inline-flex; color: #7e174e; background: #fce7f2; border-radius: 999px; padding: 7px 12px; font-size: .8rem; font-weight: 700; }
+.pageHeader { display: flex; justify-content: space-between; align-items: end; gap: 24px; margin: 32px 0 24px; }
+.pageHeader span { color: #98175e; font-weight: 700; }
+.pageHeader h2 { font-size: clamp(2rem, 5vw, 3.25rem); margin: 2px 0 0; letter-spacing: -.04em; }
+.pageHeader p { color: #71636d; max-width: 420px; }
+.statsGrid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.statCard, .contentCard, .patientCard { background: white; border: 1px solid #eadce5; border-radius: 18px; box-shadow: 0 10px 30px rgba(80,19,63,.07); }
+.statCard { padding: 24px; display: grid; gap: 8px; }
+.statCard span, .statCard small { color: #71636d; }
+.statCard strong { color: #98175e; font-size: 2.3rem; }
+.contentCard { margin-top: 20px; padding: 26px; }
+.patientGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 22px; }
+.patientCard { padding: 18px; display: flex; gap: 14px; align-items: center; }
+.patientCard h3, .patientCard p { margin: 0 0 5px; }
+.patientCard p, .patientCard small { color: #71636d; }
+.avatar { width: 44px; height: 44px; border-radius: 14px; background: #f7d6e8; color: #87154f; display: grid; place-items: center; font-weight: 800; }
+.twoColumns { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.twoColumns .contentCard { margin-top: 0; }
+form { display: grid; gap: 16px; }
+label, .searchLabel { display: grid; gap: 7px; font-weight: 650; }
+input, select { width: 100%; padding: 12px 13px; border: 1px solid #d9cbd4; border-radius: 10px; background: white; color: #24151f; }
+input:focus, select:focus { outline: 3px solid #f4c4dd; border-color: #a61965; }
+.primaryButton, .secondaryButton { border: 0; border-radius: 11px; padding: 12px 16px; font-weight: 750; }
+.primaryButton { background: #a61965; color: white; }
+.primaryButton:hover { background: #86124f; }
+.secondaryButton { background: rgba(255,255,255,.15); color: white; }
+.appointmentList { list-style: none; padding: 0; display: grid; gap: 10px; }
+.appointmentList li { background: #fbf3f7; padding: 13px; border-radius: 10px; display: grid; gap: 4px; }
+.appointmentList span { color: #71636d; }
+.error { color: #a31338; background: #fff0f3; border-radius: 8px; padding: 10px; }
+.loginPage { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: radial-gradient(circle at top right, #e6a7c8, transparent 35%), #50133f; }
+.loginCard { width: min(440px, 100%); background: white; padding: 36px; border-radius: 24px; box-shadow: 0 24px 70px rgba(31,7,24,.3); }
+.loginCard h1 { font-size: 2rem; margin-bottom: 8px; }
+.loginCard > p, .loginCard > small { color: #71636d; }
+@media (max-width: 800px) {
+  .appShell { grid-template-columns: 1fr; }
+  .sidebar { padding: 20px; }
+  .sidebar nav { grid-template-columns: repeat(3, 1fr); }
+  .sidebar nav a { text-align: center; padding: 10px 6px; font-size: .88rem; }
+  .mainContent { padding: 24px 18px 48px; }
+  .pageHeader { align-items: start; flex-direction: column; }
+  .statsGrid, .patientGrid, .twoColumns { grid-template-columns: 1fr; }
+}
